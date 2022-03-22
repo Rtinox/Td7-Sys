@@ -18,15 +18,16 @@ class Client {
   static PrivateKey pvKey;
   static PublicKey pbKey;
   static Key key;
+  static String STOP_MESSAGE = "stop";
 
   public static void main(String[] args) throws Exception {
     String ip = (args.length == 1) ? args[0] : "localhost";
     int port = 6020;
     System.out.println("Connexion au serveur " + ip + ":" + port);
-    
+
     Socket socket = new Socket(ip, port);
     BufferedReader ins = new BufferedReader(
-    new InputStreamReader(socket.getInputStream()));
+        new InputStreamReader(socket.getInputStream()));
     PrintWriter outs = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 
     System.out.println("Connecté, génération du couple des clé ...");
@@ -47,22 +48,44 @@ class Client {
     byte[] decodedDES = Base64.getDecoder().decode(DESEncodedKey.getBytes());
     decodedDES = decode(decodedDES, pvKey, "RSA");
     key = new SecretKeySpec(decodedDES, 0, decodedDES.length, "DES");
-    
+
+    Thread t = new Thread() {
+      public void run() {
+        try {
+          while (true) {
+            String line = ins.readLine();
+            if (line == null)
+              continue;
+            byte[] message = decode(Base64.getDecoder().decode(line.getBytes()), key, "DES");
+            String message_decoded = new String(message);
+            System.out.println("Reçu: " + message_decoded);
+            //outs.println(Base64.getEncoder().encodeToString(encode(message_decoded.getBytes(), key, "DES")));
+            if (new String(message).equals(STOP_MESSAGE))
+              break;
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    };
+    t.start();
+
     System.out.println("Entrez votre message (\"stop\" pour quitter):");
-    
+
     String line;
     while ((line = new BufferedReader(new InputStreamReader(System.in)).readLine()) != null) {
       byte[] encoded_message = encode(line.getBytes(), key, "DES");
       String base64_message = Base64.getEncoder().encodeToString(encoded_message);
       outs.println(base64_message);
 
-      String serveur_message = ins.readLine();
+      /*String serveur_message = ins.readLine();
       byte[] base64_decode = Base64.getDecoder().decode(serveur_message);
       byte[] decoded = decode(base64_decode, key, "DES");
       System.out.println("Server: " + new String(decoded));
-      if (line.equals("stop")) break;
+      if (line.equals("stop"))
+        break;*/
     }
-    
+
     outs.println("stop");
     ins.close();
     outs.close();

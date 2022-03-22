@@ -31,6 +31,31 @@ class Serveur {
     PrintWriter outs = new PrintWriter(new BufferedWriter(
         new OutputStreamWriter(socket.getOutputStream())), true);
 
+    Thread t = new Thread() {
+      public void run() {
+        try
+        {
+          String line;
+          while ((line = new BufferedReader(new InputStreamReader(System.in)).readLine()) != null) {
+            byte[] encoded_message = encode(line.getBytes(), desKey, "DES");
+            String base64_message = Base64.getEncoder().encodeToString(encoded_message);
+            outs.println(base64_message);
+  
+            /*String serveur_message = ins.readLine();
+            byte[] base64_decode = Base64.getDecoder().decode(serveur_message);
+            byte[] decoded = decode(base64_decode, desKey, "DES");
+            System.out.println("Server: " + new String(decoded));*/
+            if (line.equals("stop")) break;
+          }
+        }
+        catch (Exception e)
+        {
+          e.printStackTrace();
+        }
+      }
+    };
+    t.start();
+
     while (true) {
       String line = ins.readLine();
       if (line == null)
@@ -56,7 +81,7 @@ class Serveur {
       byte[] message = decode(Base64.getDecoder().decode(line.getBytes()), desKey, "DES");
       String message_decoded = new String(message);
       System.out.println("Reçu: " + message_decoded);
-      outs.println(Base64.getEncoder().encodeToString(encode(message_decoded.getBytes(), desKey, "DES")));
+      //outs.println(Base64.getEncoder().encodeToString(encode(message_decoded.getBytes(), desKey, "DES")));
       if (new String(message).equals(STOP_MESSAGE))
         break;
     }
