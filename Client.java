@@ -73,7 +73,7 @@ class Client {
     };
     t.start();
 
-    System.out.println("Entrez votre message (\"stop\" pour quitter):");
+    System.out.println("Entrez votre pseudo puis vos messages (\"stop\" pour quitter):");
 
     // Envoie d'un message vers le serveur.
     String line;
