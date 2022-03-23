@@ -87,6 +87,7 @@ class Client {
     }
 
     // Fermeture des sockets.
+    t.interrupt();
     outs.println("stop");
     ins.close();
     outs.close();
