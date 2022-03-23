@@ -21,10 +21,12 @@ class Client {
   static String STOP_MESSAGE = "stop";
 
   public static void main(String[] args) throws Exception {
+    // Récupération de l'ip si mise en argument.
     String ip = (args.length == 1) ? args[0] : "localhost";
     int port = 6020;
     System.out.println("Connexion au serveur " + ip + ":" + port);
 
+    // Création de la socket, du buffer d'entrée et de sortie.
     Socket socket = new Socket(ip, port);
     BufferedReader ins = new BufferedReader(
         new InputStreamReader(socket.getInputStream()));
@@ -39,27 +41,28 @@ class Client {
     pbKey = keyPair.getPublic();
 
     System.out.println("Clés générés, envoi de celle-ci ...");
-    outs.println(Base64.getEncoder().encodeToString(pbKey.getEncoded()));
+    outs.println(Base64.getEncoder().encodeToString(pbKey.getEncoded())); // Envoie au serveur.
 
-    System.out.println("Récupération de la clé DES crypté ...");
-    String DESEncodedKey = ins.readLine();
+    System.out.println("Récupération de la clé DES crypté ..."); 
+    String DESEncodedKey = ins.readLine(); // Récupération depuis le serveur.
 
     System.out.println("Décriptage de la clé ...");
     byte[] decodedDES = Base64.getDecoder().decode(DESEncodedKey.getBytes());
     decodedDES = decode(decodedDES, pvKey, "RSA");
     key = new SecretKeySpec(decodedDES, 0, decodedDES.length, "DES");
 
+    // Création d'un Thread pour la réception des messages.
     Thread t = new Thread() {
       public void run() {
         try {
           while (true) {
-            String line = ins.readLine();
+            String line = ins.readLine(); // Lecture de l'entrée.
             if (line == null)
               continue;
+            // Décode en base64 puis décode avec la clé DES
             byte[] message = decode(Base64.getDecoder().decode(line.getBytes()), key, "DES");
             String message_decoded = new String(message);
             System.out.println("Reçu: " + message_decoded);
-            //outs.println(Base64.getEncoder().encodeToString(encode(message_decoded.getBytes(), key, "DES")));
             if (new String(message).equals(STOP_MESSAGE))
               break;
           }
@@ -72,26 +75,25 @@ class Client {
 
     System.out.println("Entrez votre message (\"stop\" pour quitter):");
 
+    // Envoie d'un message vers le serveur.
     String line;
     while ((line = new BufferedReader(new InputStreamReader(System.in)).readLine()) != null) {
+      // Lecture de la saisie clavier puis encodage DES.
       byte[] encoded_message = encode(line.getBytes(), key, "DES");
       String base64_message = Base64.getEncoder().encodeToString(encoded_message);
-      outs.println(base64_message);
+      outs.println(base64_message); // Envoie au serveur.
 
-      /*String serveur_message = ins.readLine();
-      byte[] base64_decode = Base64.getDecoder().decode(serveur_message);
-      byte[] decoded = decode(base64_decode, key, "DES");
-      System.out.println("Server: " + new String(decoded));
-      if (line.equals("stop"))
-        break;*/
+      if (line.equals("stop")) break;
     }
 
+    // Fermeture des sockets.
     outs.println("stop");
     ins.close();
     outs.close();
     socket.close();
   }
 
+  // Fonction permettant d'encoder un message en fonction de la clé et du type d'encodage
   public static byte[] encode(byte[] data, Key key, String mode) throws Exception {
     Cipher cipher = Cipher.getInstance(mode);
     cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -100,6 +102,7 @@ class Client {
     return bytes;
   }
 
+    // Fonction permettant de décoder un message en fonction de la clé et du type d'encodage
   public static byte[] decode(byte[] b, Key key, String mode) throws Exception {
     Cipher cipher = Cipher.getInstance(mode);
     cipher.init(Cipher.DECRYPT_MODE, key);
