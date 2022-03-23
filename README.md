@@ -2,10 +2,19 @@
 Suzanne ROBERT et Nathan ROUCHÉ
 ___
 
-[Lien git (pour voir le markdown)](https://github.com/Rtinox/Td7-Sys)
+[Lien github](https://github.com/Rtinox/Td7-Sys)
 
-### Schéma
+## Schéma
 ![Schema](Schema.png)
 
-### Code
-Nos programmes permettent l'échange de messages de manière sécurisé. Le chat est en "peer-to-peer", c'est-à-dire qu'il n'y a qu'un seul client et serveur lors de la communication.
+## Utilisation 
+### Serveur
+Lancez la commande `javac Serveur.java && java Serveur`
+Puis connectez les clients
+Il est possible d'envoyer un message depuis le serveur à tous les clients
+
+### Client
+Lancez la commande `javac Client.java && java Client` puis entrez le 'pseudo' du client.
+Une fois cela fait, vous pourrez échangez des messages à tous les clients.
+Les clients recoivent les messages depuis le serveur de tous les clients.
+Chaque client sécurise ses échanges avec un clé RSA differente des autres clients

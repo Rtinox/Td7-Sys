@@ -62,7 +62,7 @@ class Client {
             // Décode en base64 puis décode avec la clé DES
             byte[] message = decode(Base64.getDecoder().decode(line.getBytes()), key, "DES");
             String message_decoded = new String(message);
-            System.out.println("Reçu: " + message_decoded);
+            System.out.println(message_decoded);
             if (new String(message).equals(STOP_MESSAGE))
               break;
           }
